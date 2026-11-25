@@ -1,0 +1,2 @@
+import type {Request,Response,NextFunction} from "express";import jwt from "jsonwebtoken";
+export function auth(req:Request,res:Response,next:NextFunction){const t=req.cookies?.token;if(!t)return res.status(401).json({success:false,data:null,message:"Login required"});try{const p=jwt.verify(t,process.env.JWT_SECRET||"dev-secret") as {userId:string};req.userId=p.userId;next()}catch{return res.status(401).json({success:false,data:null,message:"Invalid session"})}}

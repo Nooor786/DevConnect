@@ -1,0 +1,80 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+model User {
+ id String @id @default(cuid())
+ name String
+ email String @unique
+ passwordHash String?
+ avatarUrl String?
+ bio String?
+ location String?
+ website String?
+ skills Skill[]
+ projects Project[]
+ posts BlogPost[]
+ sent Connection[] @relation("Requester")
+ received Connection[] @relation("Addressee")
+ endorsements Endorsement[] @relation("Endorsed")
+ given Endorsement[] @relation("Endorser")
+ notifications Notification[]
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+}
+model Skill {
+ id String @id @default(cuid())
+ name String
+ userId String
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ endorsements Endorsement[]
+ @@unique([name,userId])
+}
+model Project {
+ id String @id @default(cuid())
+ title String
+ description String
+ techStack String[]
+ repoUrl String?
+ liveUrl String?
+ ownerId String
+ owner User @relation(fields:[ownerId],references:[id],onDelete:Cascade)
+ createdAt DateTime @default(now())
+}
+model BlogPost {
+ id String @id @default(cuid())
+ title String
+ content String
+ tags String[]
+ authorId String
+ author User @relation(fields:[authorId],references:[id],onDelete:Cascade)
+ createdAt DateTime @default(now())
+}
+model Connection {
+ id String @id @default(cuid())
+ requesterId String
+ addresseeId String
+ status String @default("PENDING")
+ requester User @relation("Requester",fields:[requesterId],references:[id],onDelete:Cascade)
+ addressee User @relation("Addressee",fields:[addresseeId],references:[id],onDelete:Cascade)
+ createdAt DateTime @default(now())
+ @@unique([requesterId,addresseeId])
+}
+model Endorsement {
+ id String @id @default(cuid())
+ endorserId String
+ endorsedUserId String
+ skillId String
+ endorser User @relation("Endorser",fields:[endorserId],references:[id],onDelete:Cascade)
+ endorsed User @relation("Endorsed",fields:[endorsedUserId],references:[id],onDelete:Cascade)
+ skill Skill @relation(fields:[skillId],references:[id],onDelete:Cascade)
+ createdAt DateTime @default(now())
+ @@unique([endorserId,skillId])
+}
+model Notification {
+ id String @id @default(cuid())
+ userId String
+ type String
+ message String
+ read Boolean @default(false)
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ createdAt DateTime @default(now())
+}
